@@ -38,6 +38,11 @@ func SetDbConfig(cfg DbConfig) {
 	config.MaxLifetime = cfg.MaxLifetime * time.Second
 }
 
+// NewDB new DB object
+func NewDB() *DB {
+	return &DB{}
+}
+
 // NoRows check norows error
 func (d *DB) NoRows(err error) bool {
 	if err == sql.ErrNoRows {
@@ -78,7 +83,9 @@ func (d *DB) Rollback() {
 }
 
 // TransExec trans execute
-func (d *DB) TransExec(query string, args interface{}) (LastInsertId, RowsAffected int64, err error) {
+func (d *DB) TransExec(
+	query string,
+	args interface{}) (LastInsertId, RowsAffected int64, err error) {
 	if rs, err := d.tx.NamedExec(query, args); err == nil {
 		RowsAffected, _ = rs.RowsAffected()
 		LastInsertId, _ = rs.LastInsertId()
@@ -125,7 +132,9 @@ func (d *DB) Row(dest interface{}, query string, args interface{}) error {
 }
 
 // Insert insert into
-func (d *DB) Insert(query string, args interface{}) (LastInsertId, RowsAffected int64, err error) {
+func (d *DB) Insert(
+	query string,
+	args interface{}) (LastInsertId, RowsAffected int64, err error) {
 	err = d.Connect()
 	if err != nil {
 		return
@@ -140,7 +149,9 @@ func (d *DB) Insert(query string, args interface{}) (LastInsertId, RowsAffected 
 }
 
 // Update update/delete
-func (d *DB) Update(query string, args interface{}) (RowsAffected int64, err error) {
+func (d *DB) Update(
+	query string,
+	args interface{}) (RowsAffected int64, err error) {
 	err = d.Connect()
 	if err != nil {
 		return

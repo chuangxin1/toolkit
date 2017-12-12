@@ -25,7 +25,9 @@ func CopyURL(base *url.URL, path string) *url.URL {
 }
 
 // ClientEncodeGetRequest client get encode request
-func ClientEncodeGetRequest(ctx context.Context, req *http.Request, request interface{}) error {
+func ClientEncodeGetRequest(
+	ctx context.Context,
+	req *http.Request, request interface{}) error {
 	values := URLValuesStruct(request)
 
 	auth, ok := ctx.Value(ContextKeyRequestAuthorization).(string)
@@ -42,11 +44,14 @@ func ClientEncodeGetRequest(ctx context.Context, req *http.Request, request inte
 	return nil
 }
 
-// ClientEncodeJSONRequest is an EncodeRequestFunc that serializes the request as a
-// JSON object to the Request body. Many JSON-over-HTTP services can use it as
-// a sensible default. If the request implements Headerer, the provided headers
-// will be applied to the request.
-func ClientEncodeJSONRequest(ctx context.Context, req *http.Request, request interface{}) error {
+// ClientEncodeJSONRequest is an EncodeRequestFunc that serializes the request
+// as a JSON object to the Request body. Many JSON-over-HTTP services can use
+// it as a sensible default. If the request implements Headerer, the provided
+// headers will be applied to the request.
+func ClientEncodeJSONRequest(
+	ctx context.Context,
+	req *http.Request,
+	request interface{}) error {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	if headerer, ok := request.(httptransport.Headerer); ok {
@@ -93,7 +98,8 @@ func ClientRequestEndpoint(
 		options...,
 	).Endpoint()
 
-	e = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(e)
+	e = circuitbreaker.Gobreaker(
+		gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(e)
 	//e = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), qps))(e)
 
 	return e

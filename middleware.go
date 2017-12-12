@@ -9,7 +9,9 @@ import (
 // AuthMiddleware auth
 func AuthMiddleware() endpoint.Middleware {
 	return func(next endpoint.Endpoint) endpoint.Endpoint {
-		return func(ctx context.Context, request interface{}) (interface{}, error) {
+		return func(
+			ctx context.Context,
+			request interface{}) (interface{}, error) {
 			auth, _ := ctx.Value(ContextKeyRequestAuthorization).(string)
 			token, _ := ctx.Value(ContextKeyAccessToken).(string)
 

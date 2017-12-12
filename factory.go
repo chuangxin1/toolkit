@@ -18,7 +18,7 @@ var (
 	// 请求失败重试次数
 	retryMax = 3
 	// 请求重试时间间隔
-	retryTimeout = 250 * time.Millisecond
+	retryTimeout = 500 * time.Millisecond
 )
 
 func factory(ctx context.Context, method, router string) sd.Factory {
@@ -42,7 +42,8 @@ func FactoryLoadBalancer(
 	method, router string,
 	logger log.Logger) endpoint.Endpoint {
 
-	endpointer := sd.NewEndpointer(instancer, factory(ctx, method, router), logger)
+	endpointer := sd.NewEndpointer(instancer,
+		factory(ctx, method, router), logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	return lb.Retry(retryMax, retryTimeout, balancer)
 }

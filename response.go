@@ -141,9 +141,20 @@ func RowReplyData(row interface{}) *ReplyData {
 
 // HTTPWriteJSON response JSON data.
 func HTTPWriteJSON(w http.ResponseWriter, response interface{}) error {
-	w.Header().Add("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.Header().Set("X-Power", "go toolkit v0.2")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(response)
+}
+
+// HTTPWriteString response string
+func HTTPWriteString(w http.ResponseWriter, response []byte) error {
+	w.Header().Add("Content-Type", "text/plan")
+	w.WriteHeader(http.StatusOK)
+
+	w.Write(response)
+
+	return nil
 }
 
 // HTTPWriteCtxJSON response JSON data.
@@ -161,7 +172,9 @@ func HTTPEncodeError(_ context.Context, err error, w http.ResponseWriter) {
 }
 
 // HTTPDecodeResponse decode client
-func HTTPDecodeResponse(ctx context.Context, r *http.Response) (interface{}, error) {
+func HTTPDecodeResponse(
+	ctx context.Context,
+	r *http.Response) (interface{}, error) {
 	var response ReplyData
 	if err := json.NewDecoder(r.Body).Decode(&response); err != nil {
 		return ErrReplyData(ErrException, `服务端数据格式错误`), err
@@ -172,7 +185,9 @@ func HTTPDecodeResponse(ctx context.Context, r *http.Response) (interface{}, err
 // PopulateRequestContext is a RequestFunc that populates several values into
 // the context from the HTTP request. Those values may be extracted using the
 // corresponding ContextKey type in this package.
-func PopulateRequestContext(ctx context.Context, r *http.Request) context.Context {
+func PopulateRequestContext(
+	ctx context.Context,
+	r *http.Request) context.Context {
 	var accessToken string
 	accessToken = r.URL.Query().Get(VarUserAuthorization)
 	if accessToken == "" {

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -148,11 +149,11 @@ func HTTPWriteJSON(w http.ResponseWriter, response interface{}) error {
 }
 
 // HTTPWriteString response string
-func HTTPWriteString(w http.ResponseWriter, response []byte) error {
+func HTTPWriteString(w http.ResponseWriter, response interface{}) error {
 	w.Header().Add("Content-Type", "text/plan")
 	w.WriteHeader(http.StatusOK)
 
-	w.Write(response)
+	w.Write([]byte(response.(string)))
 
 	return nil
 }
@@ -196,6 +197,13 @@ func PopulateRequestContext(
 		}
 	}
 
+	token := r.Header.Get(HTTPHeaderAuthorization)
+	if accessToken == "" {
+		if len(token) > 6 && strings.ToUpper(token[0:7]) == "BEARER " {
+			accessToken = token[7:]
+		}
+	}
+
 	for k, v := range map[contextKey]string{
 		ContextKeyRequestMethod:          r.Method,
 		ContextKeyRequestURI:             r.RequestURI,
@@ -205,7 +213,7 @@ func PopulateRequestContext(
 		ContextKeyRequestRemoteAddr:      r.RemoteAddr,
 		ContextKeyRequestXForwardedFor:   r.Header.Get("X-Forwarded-For"),
 		ContextKeyRequestXForwardedProto: r.Header.Get("X-Forwarded-Proto"),
-		ContextKeyRequestAuthorization:   r.Header.Get(HTTPHeaderAuthorization),
+		ContextKeyRequestAuthorization:   token,
 		ContextKeyRequestReferer:         r.Header.Get("Referer"),
 		ContextKeyRequestUserAgent:       r.Header.Get("User-Agent"),
 		ContextKeyRequestXRequestID:      r.Header.Get("X-Request-Id"),

@@ -8,18 +8,37 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/julienschmidt/httprouter"
 )
 
-// HTTPServerOptions default http transport options
-func HTTPServerOptions(logger log.Logger) []httptransport.ServerOption {
+// HTTPTansportServerOptions default http transport options
+func HTTPTansportServerOptions(logger log.Logger) []httptransport.ServerOption {
 	return []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
 		httptransport.ServerErrorEncoder(HTTPEncodeError),
 		httptransport.ServerBefore(PopulateRequestContext),
 	}
+}
+
+// NewHTTPTansportServer new server hander
+func NewHTTPTansportServer(
+	hasAuth bool,
+	e endpoint.Endpoint,
+	dec httptransport.DecodeRequestFunc,
+	logger log.Logger) *httptransport.Server {
+	options := HTTPTansportServerOptions(logger)
+	if hasAuth {
+		e = AuthMiddleware()(e)
+	}
+	return httptransport.NewServer(
+		e,
+		dec,
+		HTTPWriteCtxJSON,
+		options...,
+	)
 }
 
 // StartServer new server and start

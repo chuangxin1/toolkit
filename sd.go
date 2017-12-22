@@ -74,7 +74,11 @@ func ServiceRegister(options ServiceOptions, agent AgentServiceOptions) error {
 
 	//增加check。
 	check := new(consulapi.AgentServiceCheck)
-	check.HTTP = fmt.Sprintf("http://%s:%d%s", agent.Address, agent.Port, "/health")
+	check.HTTP = fmt.Sprintf(
+		"http://%s:%d%s",
+		agent.Address,
+		agent.Port,
+		"/health")
 	//设置超时 5s。
 	check.Timeout = "5s"
 	//设置间隔 5s。

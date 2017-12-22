@@ -25,7 +25,10 @@ func SetAccessTokenKey(key []byte) {
 
 // NewAccessToken new token
 func NewAccessToken(tok AccessToken) (string, error) {
-	claims := jwt.MapClaims{"id": tok.ID, "name": tok.Name, "expires_in": tok.Expires}
+	claims := jwt.MapClaims{
+		"id":         tok.ID,
+		"name":       tok.Name,
+		"expires_in": tok.Expires}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	// Sign and get the complete encoded token as a string using the secret
@@ -39,9 +42,11 @@ func ParseAccessToken(accessToken string) (AccessToken, error) {
 		e   error
 	)
 
-	token, err := jwt.Parse(accessToken, func(token *jwt.Token) (interface{}, error) {
-		return accessTokenKey, nil
-	})
+	token, err := jwt.Parse(
+		accessToken,
+		func(token *jwt.Token) (interface{}, error) {
+			return accessTokenKey, nil
+		})
 
 	if token.Valid {
 		claims := token.Claims.(jwt.MapClaims)
@@ -59,7 +64,8 @@ func ParseAccessToken(accessToken string) (AccessToken, error) {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 			//fmt.Println("That's not even a token")
 			e = errors.New(`That's not even a token`)
-		} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+		} else if ve.Errors&
+			(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 			// Token is either expired or not active yet
 			//fmt.Println("Timing is everything")
 			e = errors.New(`expired`)

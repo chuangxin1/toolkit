@@ -132,7 +132,9 @@ func (c RedisCache) Set(key, value string, expiration time.Duration) error {
 }
 
 // SetCluster set key-value to cache
-func (c RedisCache) SetCluster(key, value string, expiration time.Duration) error {
+func (c RedisCache) SetCluster(
+	key, value string,
+	expiration time.Duration) error {
 	return c.cc.Set(key, value, expiration).Err()
 }
 

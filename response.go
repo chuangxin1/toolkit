@@ -3,6 +3,7 @@ package toolkit
 import (
 	"context"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -29,6 +30,8 @@ const (
 	ErrNotAllowed = 1008
 	// ErrDataExists 400 数据已存在
 	ErrDataExists = 1009
+	// ErrDataValidate 403 数据验证错误
+	ErrDataValidate = 1010
 
 	// VarUserAuthorization 传递用户验证信息
 	VarUserAuthorization = `access_token`
@@ -70,6 +73,7 @@ func init() {
 	statusMessage[ErrDataNotFound] = `数据未找到`
 	statusMessage[ErrNotAllowed] = `没有访问权限`
 	statusMessage[ErrDataExists] = `数据已存在`
+	statusMessage[ErrDataValidate] = `数据验证错误`
 }
 
 // NewReplyData creates and return ReplyData with status and message
@@ -143,18 +147,16 @@ func RowReplyData(row interface{}) *ReplyData {
 // HTTPWriteJSON response JSON data.
 func HTTPWriteJSON(w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.Header().Set("X-Power", "go toolkit v0.2")
+	w.Header().Set("X-Power", "csacred/0.2")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(response)
 }
 
 // HTTPWriteString response string
 func HTTPWriteString(w http.ResponseWriter, response interface{}) error {
-	w.Header().Add("Content-Type", "text/plan")
+	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-
-	w.Write([]byte(response.(string)))
-
+	w.Write(response.([]byte))
 	return nil
 }
 
@@ -163,8 +165,15 @@ func HTTPWriteCtxJSON(
 	_ context.Context,
 	w http.ResponseWriter,
 	response interface{}) error {
-
 	return HTTPWriteJSON(w, response)
+}
+
+// HTTPWriteCtxString response text data.
+func HTTPWriteCtxString(
+	_ context.Context,
+	w http.ResponseWriter,
+	response interface{}) error {
+	return HTTPWriteString(w, response)
 }
 
 // HTTPEncodeError request encode error response
@@ -181,6 +190,14 @@ func HTTPDecodeResponse(
 		return ErrReplyData(ErrException, `服务端数据格式错误`), err
 	}
 	return response, nil
+}
+
+// HTTPDecodeStringResponse decode client
+func HTTPDecodeStringResponse(
+	ctx context.Context,
+	r *http.Response) (interface{}, error) {
+
+	return ioutil.ReadAll(r.Body)
 }
 
 // PopulateRequestContext is a RequestFunc that populates several values into

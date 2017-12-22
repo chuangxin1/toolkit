@@ -16,7 +16,8 @@ type AesCrypto struct {
 	Key []byte
 }
 
-// SetAesCryptoKey set key, key长度：16, 24, 32 bytes 对应 AES-128, AES-192, AES-256
+// SetAesCryptoKey set key,
+// key长度：16, 24, 32 bytes 对应 AES-128, AES-192, AES-256
 func SetAesCryptoKey(password string) {
 	key = password
 }

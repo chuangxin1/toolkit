@@ -21,7 +21,10 @@ var (
 	retryTimeout = 500 * time.Millisecond
 )
 
-func factory(ctx context.Context, method, router string) sd.Factory {
+func factory(
+	ctx context.Context,
+	method, router string,
+	dec DecodeResponseFunc) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		if !strings.HasPrefix(instance, "http") {
 			instance = "http://" + instance
@@ -31,7 +34,7 @@ func factory(ctx context.Context, method, router string) sd.Factory {
 			return nil, nil, err
 		}
 
-		return ClientRequestEndpoint(ctx, tgt, method, router), nil, nil
+		return ClientRequestEndpoint(ctx, tgt, method, router, dec), nil, nil
 	}
 }
 
@@ -40,10 +43,13 @@ func FactoryLoadBalancer(
 	ctx context.Context,
 	instancer *consulsd.Instancer,
 	method, router string,
+	dec DecodeResponseFunc,
 	logger log.Logger) endpoint.Endpoint {
 
-	endpointer := sd.NewEndpointer(instancer,
-		factory(ctx, method, router), logger)
+	endpointer := sd.NewEndpointer(
+		instancer,
+		factory(ctx, method, router, dec),
+		logger)
 	balancer := lb.NewRoundRobin(endpointer)
 	return lb.Retry(retryMax, retryTimeout, balancer)
 }

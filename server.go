@@ -1,6 +1,7 @@
 package toolkit
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -14,8 +15,23 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+// EncodeResponseFunc encodes the passed response object to the HTTP response
+// writer. It's designed to be used in HTTP servers, for server-side
+// endpoints. One straightforward EncodeResponseFunc could be something that
+// JSON encodes the object directly to the response body.
+type EncodeResponseFunc func(context.Context,
+	http.ResponseWriter, interface{}) error
+
+// DecodeResponseFunc extracts a user-domain response object from an HTTP
+// response object. It's designed to be used in HTTP clients, for client-side
+// endpoints. One straightforward DecodeResponseFunc could be something that
+// JSON decodes from the response body to the concrete response type.
+type DecodeResponseFunc func(
+	context.Context, *http.Response) (response interface{}, err error)
+
 // HTTPTansportServerOptions default http transport options
-func HTTPTansportServerOptions(logger log.Logger) []httptransport.ServerOption {
+func HTTPTansportServerOptions(
+	logger log.Logger) []httptransport.ServerOption {
 	return []httptransport.ServerOption{
 		httptransport.ServerErrorLogger(logger),
 		httptransport.ServerErrorEncoder(HTTPEncodeError),
@@ -28,6 +44,7 @@ func NewHTTPTansportServer(
 	hasAuth bool,
 	e endpoint.Endpoint,
 	dec httptransport.DecodeRequestFunc,
+	enc EncodeResponseFunc,
 	logger log.Logger) *httptransport.Server {
 	options := HTTPTansportServerOptions(logger)
 	if hasAuth {
@@ -36,7 +53,7 @@ func NewHTTPTansportServer(
 	return httptransport.NewServer(
 		e,
 		dec,
-		HTTPWriteCtxJSON,
+		httptransport.EncodeResponseFunc(enc),
 		options...,
 	)
 }

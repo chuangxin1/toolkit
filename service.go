@@ -18,5 +18,6 @@ type EndpointHander struct {
 	Method   string
 	Router   string
 	Dec      httptransport.DecodeRequestFunc
+	Enc      EncodeResponseFunc
 	Endpoint endpoint.Endpoint
 }

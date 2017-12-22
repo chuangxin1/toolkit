@@ -79,6 +79,37 @@ func ClientEncodeJSONRequest(
 func ClientRequestEndpoint(
 	ctx context.Context,
 	u *url.URL,
+	method, router string,
+	dec DecodeResponseFunc) endpoint.Endpoint {
+	var e endpoint.Endpoint
+	options := []httptransport.ClientOption{}
+	var enc httptransport.EncodeRequestFunc
+
+	switch method {
+	case "POST":
+		enc = ClientEncodeJSONRequest
+	default:
+		enc = ClientEncodeGetRequest
+	}
+	e = httptransport.NewClient(
+		method,
+		CopyURL(u, router),
+		enc,
+		httptransport.DecodeResponseFunc(dec),
+		options...,
+	).Endpoint()
+
+	e = circuitbreaker.Gobreaker(
+		gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(e)
+	//e = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), qps))(e)
+
+	return e
+}
+
+// ClientRequestStringEndpoint client request Endpoint
+func ClientRequestStringEndpoint(
+	ctx context.Context,
+	u *url.URL,
 	method, router string) endpoint.Endpoint {
 	var e endpoint.Endpoint
 	options := []httptransport.ClientOption{}
@@ -94,7 +125,7 @@ func ClientRequestEndpoint(
 		method,
 		CopyURL(u, router),
 		enc,
-		HTTPDecodeResponse,
+		HTTPDecodeStringResponse,
 		options...,
 	).Endpoint()
 

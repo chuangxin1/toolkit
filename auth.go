@@ -1,8 +1,8 @@
 package toolkit
 
 import (
+	"encoding/json"
 	"errors"
-	"strings"
 
 	jwt "github.com/dgrijalva/jwt-go"
 )
@@ -11,16 +11,52 @@ import (
 type AccessToken struct {
 	ID      string `json:"id"`
 	Name    string `json:"name"`
-	Expires int    `json:"expires_in"`
+	Expires int64  `json:"expires_in"`
+}
+
+// CacheAccessToken cache access token
+type CacheAccessToken struct {
+	ID      int    `json:"id"`
+	Name    string `json:"name"`
+	Status  int    `json:"status"`
+	Expires int64  `json:"expires_in"`
+	Message string `json:"message"`
 }
 
 var (
 	accessTokenKey []byte
 )
 
+// cacheKey cache token key
+func cacheKey(id string) string {
+	return `user:user:` + id
+}
+
+// AccessTokenStorageCache storage CacheAccessToken to redis
+func AccessTokenStorageCache(id string, token CacheAccessToken) error {
+	bytes, err := json.Marshal(token)
+	if err != nil {
+		return err
+	}
+	redis := NewRedisCache()
+	return redis.Set(cacheKey(id), string(bytes), 0)
+}
+
+// AccessTokenGetCache get CacheAccessToken from redis
+func AccessTokenGetCache(id string) (CacheAccessToken, error) {
+	redis := NewRedisCache()
+	data, err := redis.Get(cacheKey(id))
+	var token CacheAccessToken
+	if err != nil {
+		return token, err
+	}
+	err = json.Unmarshal([]byte(data), &token)
+	return token, err
+}
+
 // SetAccessTokenKey set jwt key
-func SetAccessTokenKey(key []byte) {
-	accessTokenKey = key
+func SetAccessTokenKey(key string) {
+	accessTokenKey = []byte(key)
 }
 
 // NewAccessToken new token
@@ -57,31 +93,22 @@ func ParseAccessToken(accessToken string) (AccessToken, error) {
 			tok.Name = name.(string)
 		}
 		if expires, ok := claims["expires_in"]; ok {
-			tok.Expires = expires.(int)
+			tok.Expires = int64(expires.(float64))
 		}
 		e = nil
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 			//fmt.Println("That's not even a token")
-			e = errors.New(`That's not even a token`)
+			e = errors.New(`错误的认证信息`)
 		} else if ve.Errors&
 			(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 			// Token is either expired or not active yet
 			//fmt.Println("Timing is everything")
-			e = errors.New(`expired`)
+			e = errors.New(`认证信息已过期`)
 		} else {
-			e = errors.New(`Couldn't handle this token`)
+			e = errors.New(`无效的认证信息`)
 			//fmt.Println("Couldn't handle this token:", err)
 		}
 	}
 	return tok, e
-}
-
-// Strips 'Bearer ' prefix from bearer token string
-func stripBearerPrefixFromTokenString(tok string) (string, error) {
-	// Should be a bearer token
-	if len(tok) > 6 && strings.ToUpper(tok[0:7]) == "BEARER " {
-		return tok[7:], nil
-	}
-	return tok, nil
 }

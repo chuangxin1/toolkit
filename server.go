@@ -9,10 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/chuangxin1/httprouter"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
-	"github.com/julienschmidt/httprouter"
 )
 
 // EncodeResponseFunc encodes the passed response object to the HTTP response

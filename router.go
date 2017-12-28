@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/chuangxin1/httprouter"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -22,10 +22,7 @@ func NewRouter() *httprouter.Router {
 	return router
 }
 
-func defaultHandler(
-	w http.ResponseWriter,
-	r *http.Request,
-	_ httprouter.Params) {
+func defaultHandler(w http.ResponseWriter, r *http.Request) {
 	ver := map[string]string{
 		"version":  "0.2.0",
 		"comments": "chuangxin1.com API"}

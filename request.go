@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/chuangxin1/httprouter"
 	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/sd"
@@ -16,6 +17,16 @@ import (
 
 	httptransport "github.com/go-kit/kit/transport/http"
 )
+
+// RouteVars returns the route variables for the current request, if any.
+func RouteVars(ctx context.Context) map[string]string {
+	return httprouter.ContextVars(ctx)
+}
+
+// ContextVars returns the
+func ContextVars(ctx context.Context, key interface{}) interface{} {
+	return ctx.Value(key)
+}
 
 // CopyURL copy url
 func CopyURL(base *url.URL, path string) *url.URL {
@@ -59,8 +70,7 @@ func ClientEncodeJSONRequest(
 			req.Header.Set(k, headerer.Headers().Get(k))
 		}
 	}
-	auth, ok := ctx.Value(ContextKeyRequestAuthorization).(string)
-	if ok {
+	if auth, ok := ctx.Value(ContextKeyRequestAuthorization).(string); ok {
 		req.Header.Set("Authorization", auth)
 	}
 	values := url.Values{}
@@ -96,36 +106,6 @@ func ClientRequestEndpoint(
 		CopyURL(u, router),
 		enc,
 		httptransport.DecodeResponseFunc(dec),
-		options...,
-	).Endpoint()
-
-	e = circuitbreaker.Gobreaker(
-		gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(e)
-	//e = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), qps))(e)
-
-	return e
-}
-
-// ClientRequestStringEndpoint client request Endpoint
-func ClientRequestStringEndpoint(
-	ctx context.Context,
-	u *url.URL,
-	method, router string) endpoint.Endpoint {
-	var e endpoint.Endpoint
-	options := []httptransport.ClientOption{}
-	var enc httptransport.EncodeRequestFunc
-
-	switch method {
-	case "POST":
-		enc = ClientEncodeJSONRequest
-	default:
-		enc = ClientEncodeGetRequest
-	}
-	e = httptransport.NewClient(
-		method,
-		CopyURL(u, router),
-		enc,
-		HTTPDecodeStringResponse,
 		options...,
 	).Endpoint()
 

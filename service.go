@@ -1,6 +1,8 @@
 package toolkit
 
 import (
+	"net/http"
+
 	"github.com/go-kit/kit/endpoint"
 	httptransport "github.com/go-kit/kit/transport/http"
 )
@@ -9,7 +11,7 @@ import (
 type ServiceHander struct {
 	Method string
 	Router string
-	Hander *httptransport.Server
+	Hander http.Handler
 }
 
 // EndpointHander endpoint hander

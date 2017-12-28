@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"fmt"
 )
 
 var (
@@ -29,7 +28,6 @@ func GetAesCryptoKey() string {
 
 // NewAesCrypto new AesCrypto
 func NewAesCrypto() *AesCrypto {
-	fmt.Println(key)
 	return &AesCrypto{[]byte(key)}
 }
 

@@ -36,12 +36,7 @@ func CopyURL(base *url.URL, path string) *url.URL {
 	return &next
 }
 
-// ClientEncodeGetRequest client get encode request
-func ClientEncodeGetRequest(
-	ctx context.Context,
-	req *http.Request, request interface{}) error {
-	values := URLValuesStruct(request)
-
+func routePath(ctx context.Context, req *http.Request) {
 	path := req.URL.Path
 	prefix, _ := ctx.Value(ContextKeyGateWayPrefix).(string)
 	routePath := httprouter.ContextRoutePath(ctx)
@@ -53,12 +48,19 @@ func ClientEncodeGetRequest(
 			}
 		}
 	}
+}
+
+// ClientEncodeGetRequest client get encode request
+func ClientEncodeGetRequest(
+	ctx context.Context,
+	req *http.Request, request interface{}) error {
+	values := URLValuesStruct(request)
 
 	auth, ok := ctx.Value(ContextKeyRequestAuthorization).(string)
 	if ok {
 		req.Header.Set(HTTPHeaderAuthorization, auth)
 	}
-
+	routePath(ctx, req)
 	token, _ := ctx.Value(ContextKeyAccessToken).(string)
 	if token != "" {
 		values.Set(VarUserAuthorization, token)
@@ -77,7 +79,7 @@ func ClientEncodeJSONRequest(
 	req *http.Request,
 	request interface{}) error {
 	req.Header.Set("Content-Type", "application/json; charset=utf-8")
-
+	routePath(ctx, req)
 	if headerer, ok := request.(httptransport.Headerer); ok {
 		for k := range headerer.Headers() {
 			req.Header.Set(k, headerer.Headers().Get(k))

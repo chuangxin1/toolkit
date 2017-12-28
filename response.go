@@ -271,6 +271,13 @@ func PopulateRequestContext(
 	return ctx
 }
 
+type contextStringKey string
+
+const (
+	// ContextKeyGateWayPrefix api gateway route path prefix
+	ContextKeyGateWayPrefix contextStringKey = `gateway_route_prefix`
+)
+
 type contextKey int
 
 const (

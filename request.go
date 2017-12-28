@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/chuangxin1/httprouter"
 	"github.com/go-kit/kit/circuitbreaker"
@@ -40,6 +41,18 @@ func ClientEncodeGetRequest(
 	ctx context.Context,
 	req *http.Request, request interface{}) error {
 	values := URLValuesStruct(request)
+
+	path := req.URL.Path
+	prefix, _ := ctx.Value(ContextKeyGateWayPrefix).(string)
+	routePath := httprouter.ContextRoutePath(ctx)
+	if prefix != "" && routePath != "" {
+		if strings.Contains(routePath, prefix) {
+			absolutePath := routePath[len(prefix):]
+			if absolutePath != path {
+				req.URL.Path = absolutePath
+			}
+		}
+	}
 
 	auth, ok := ctx.Value(ContextKeyRequestAuthorization).(string)
 	if ok {

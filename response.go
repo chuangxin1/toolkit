@@ -58,16 +58,16 @@ type ReplyData struct {
 func init() {
 	statusMessage = make(map[int]string)
 	statusMessage[ErrOk] = `ok`
-	statusMessage[ErrNotFound] = `路由错误`
-	statusMessage[ErrException] = `数据异常`
-	statusMessage[ErrBadRequest] = `路由参数错误`
-	statusMessage[ErrMethodNotAllowed] = `不允许的请求方式`
-	statusMessage[ErrParamsError] = `参数或格式错误`
-	statusMessage[ErrUnAuthorized] = `未登录或会话期已失效`
-	statusMessage[ErrDataNotFound] = `数据未找到`
-	statusMessage[ErrNotAllowed] = `没有访问权限`
-	statusMessage[ErrDataExists] = `数据已存在`
-	statusMessage[ErrDataValidate] = `数据验证错误`
+	statusMessage[ErrNotFound] = `Not found`
+	statusMessage[ErrException] = `Exception`
+	statusMessage[ErrBadRequest] = `Routing parameter error`
+	statusMessage[ErrMethodNotAllowed] = `Method not allowed`
+	statusMessage[ErrParamsError] = `Parameter or format error`
+	statusMessage[ErrUnAuthorized] = `Not sign in or session has expired`
+	statusMessage[ErrDataNotFound] = `Data not found`
+	statusMessage[ErrNotAllowed] = `No access`
+	statusMessage[ErrDataExists] = `Data exists`
+	statusMessage[ErrDataValidate] = `Data verification failed`
 }
 
 // NewReplyData creates and return ReplyData with status and message
@@ -77,7 +77,7 @@ func NewReplyData(status int) *ReplyData {
 		exists bool
 	)
 	if text, exists = statusMessage[status]; !exists {
-		text = `新错误类型`
+		text = `incorrect data type`
 	}
 	return &ReplyData{
 		Status:  status,
@@ -138,28 +138,27 @@ func RowReplyData(row interface{}) *ReplyData {
 	}
 }
 
-// HTTPWriteJSON response JSON data.
-func HTTPWriteJSON(w http.ResponseWriter, response interface{}) error {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+func header(w http.ResponseWriter, contentType string) {
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("X-Power", "csacred/0.2.0")
 	w.WriteHeader(http.StatusOK)
+}
+
+// HTTPWriteJSON response JSON data.
+func HTTPWriteJSON(w http.ResponseWriter, response interface{}) error {
+	header(w, "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(response)
 }
 
 // HTTPWriteXML response XML data.
 func HTTPWriteXML(w http.ResponseWriter, response interface{}) error {
-	w.Header().Set("Content-Type", "application/xml; charset=utf-8")
-	w.Header().Set("X-Power", "csacred/0.2.0")
-	w.WriteHeader(http.StatusOK)
-
+	header(w, "application/xml; charset=utf-8")
 	return xml.NewEncoder(w).Encode(response)
 }
 
-// HTTPWriteString response string
-func HTTPWriteString(w http.ResponseWriter, response interface{}) error {
-	w.Header().Add("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("X-Power", "csacred/0.2.0")
-	w.WriteHeader(http.StatusOK)
+// HTTPWriteBytes response bytes
+func HTTPWriteBytes(w http.ResponseWriter, response interface{}) error {
+	header(w, "text/html; charset=utf-8")
 	w.Write(response.([]byte))
 	return nil
 }
@@ -180,12 +179,12 @@ func HTTPWriteCtxXML(
 	return HTTPWriteXML(w, response)
 }
 
-// HTTPWriteCtxString response text data.
-func HTTPWriteCtxString(
+// HTTPWriteCtxBytes response text data.
+func HTTPWriteCtxBytes(
 	_ context.Context,
 	w http.ResponseWriter,
 	response interface{}) error {
-	return HTTPWriteString(w, response)
+	return HTTPWriteBytes(w, response)
 }
 
 // HTTPEncodeError request encode error response
@@ -204,7 +203,7 @@ func HTTPDecodeResponse(
 	r *http.Response) (interface{}, error) {
 	var response ReplyData
 	if err := json.NewDecoder(r.Body).Decode(&response); err != nil {
-		return ErrReplyData(ErrException, `服务端数据格式错误`), err
+		return ErrReplyData(ErrException, `data format error`), err
 	}
 	return response, nil
 }
@@ -215,13 +214,13 @@ func HTTPDecodeXMLResponse(
 	r *http.Response) (interface{}, error) {
 	var response ReplyData
 	if err := xml.NewDecoder(r.Body).Decode(&response); err != nil {
-		return ErrReplyData(ErrException, `服务端数据格式错误`), err
+		return ErrReplyData(ErrException, `data format error`), err
 	}
 	return response, nil
 }
 
-// HTTPDecodeStringResponse decode client
-func HTTPDecodeStringResponse(
+// HTTPDecodeBytesResponse decode client
+func HTTPDecodeBytesResponse(
 	ctx context.Context,
 	r *http.Response) (interface{}, error) {
 
@@ -342,6 +341,6 @@ const (
 	// ServerFinalizerFunc is specified. Its value is of type int64.
 	ContextKeyResponseSize
 
-	// ContextKeyAccessToken 登录验证信息
+	// ContextKeyAccessToken auth access token
 	ContextKeyAccessToken
 )

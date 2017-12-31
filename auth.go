@@ -99,14 +99,14 @@ func ParseAccessToken(accessToken string) (AccessToken, error) {
 	} else if ve, ok := err.(*jwt.ValidationError); ok {
 		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 			//fmt.Println("That's not even a token")
-			e = errors.New(`错误的认证信息`)
+			e = errors.New(`False authentication information`)
 		} else if ve.Errors&
 			(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
 			// Token is either expired or not active yet
 			//fmt.Println("Timing is everything")
-			e = errors.New(`认证信息已过期`)
+			e = errors.New(`Authentication information expired`)
 		} else {
-			e = errors.New(`无效的认证信息`)
+			e = errors.New(`Invalid authentication information`)
 			//fmt.Println("Couldn't handle this token:", err)
 		}
 	}

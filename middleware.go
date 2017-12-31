@@ -36,7 +36,7 @@ func checkAuth(accessToken AccessToken) (CacheAccessToken, error) {
 	token, err = AccessTokenGetCache(string(uid))
 	t := time.Now()
 	if token.Expires <= t.Unix() {
-		err = errors.New(`认证信息已过期`)
+		err = errors.New(`Authentication information expired`)
 	}
 
 	return token, err

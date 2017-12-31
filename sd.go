@@ -64,7 +64,7 @@ func ServiceRegister(options ServiceOptions, agent AgentServiceOptions) error {
 	if err != nil {
 		return err
 	}
-	//创建一个新服务。
+	// create new service
 	registration := new(consulapi.AgentServiceRegistration)
 	registration.ID = agent.ID
 	registration.Name = agent.Name
@@ -72,18 +72,18 @@ func ServiceRegister(options ServiceOptions, agent AgentServiceOptions) error {
 	registration.Tags = agent.Tags
 	registration.Address = agent.Address
 
-	//增加check。
+	// add check。
 	check := new(consulapi.AgentServiceCheck)
 	check.HTTP = fmt.Sprintf(
 		"http://%s:%d%s",
 		agent.Address,
 		agent.Port,
 		"/health")
-	//设置超时 5s。
+	// Timeout 5s。
 	check.Timeout = "5s"
-	//设置间隔 5s。
+	// Interval 5s。
 	check.Interval = "30s"
-	//注册check服务。
+	// check。
 	registration.Check = check
 
 	return client.Agent().ServiceRegister(registration)
@@ -107,7 +107,7 @@ func NewConsulInstancer(
 
 	consulClient, err := consulapi.NewClient(config)
 	if err != nil {
-		logger.Log("err", err)
+		//logger.Log("err", err)
 		return
 	}
 	client = consulsd.NewClient(consulClient)

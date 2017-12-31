@@ -15,9 +15,9 @@ import (
 )
 
 var (
-	// 请求失败重试次数
+	// retry max
 	retryMax = 3
-	// 请求重试时间间隔
+	// retry timeout
 	retryTimeout = 500 * time.Millisecond
 )
 

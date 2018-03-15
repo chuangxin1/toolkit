@@ -11,7 +11,6 @@ import (
 func SHA2(data string) string {
 	hash := sha256.New()
 	hash.Write([]byte(data))
-
 	return hex.EncodeToString(hash.Sum(nil))
 }
 

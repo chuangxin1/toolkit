@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/chuangxin1/httprouter"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -61,7 +60,7 @@ func NewHTTPTansportServer(
 // StartServer new server and start
 func StartServer(
 	addr string,
-	router *httprouter.Router,
+	router http.Handler,
 	readTimeout, writeTimeout time.Duration,
 	maxHeaderBytes int,
 	logger log.Logger) {

@@ -3,8 +3,8 @@ package toolkit
 import (
 	"database/sql"
 	"fmt"
+	"sync"
 	"time"
-
 	//
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -21,12 +21,14 @@ type DbConfig struct {
 
 var (
 	config DbConfig
+	db     *sqlx.DB
 )
 
 // DB define
 type DB struct {
 	conn *sqlx.DB
 	tx   *sqlx.Tx
+	lock *sync.Mutex
 }
 
 // SetDbConfig set
@@ -40,25 +42,46 @@ func SetDbConfig(cfg DbConfig) {
 
 // NewDB new DB object
 func NewDB() *DB {
-	return &DB{}
+	return &DB{lock: new(sync.Mutex)}
 }
 
-// NoRows check norows error
-func (d *DB) NoRows(err error) bool {
+// ErrNoRows check norows error
+func ErrNoRows(err error) bool {
 	if err == sql.ErrNoRows {
 		return true
 	}
 	return false
 }
 
+func connect() (*sqlx.DB, error) {
+	//lock := new(sync.Mutex)
+	//lock.Lock()
+	//defer lock.Unlock()
+	if db != nil {
+		return db, nil
+	}
+	db, err := sqlx.Connect(config.Driver, config.DNS)
+	if err == nil {
+		db.DB.SetMaxOpenConns(config.MaxOpenConns)
+		db.DB.SetMaxIdleConns(config.MaxIdle)
+		db.DB.SetConnMaxLifetime(config.MaxLifetime)
+		db.Ping()
+	}
+	return db, err
+}
+
 // Connect connect to database
 func (d *DB) Connect() (err error) {
-	d.conn, err = sqlx.Connect(config.Driver, config.DNS)
-	//*
-	d.conn.DB.SetMaxOpenConns(config.MaxOpenConns)
-	d.conn.DB.SetMaxIdleConns(config.MaxIdle)
-	d.conn.DB.SetConnMaxLifetime(config.MaxLifetime)
-	// */
+	/*
+		d.conn, err = sqlx.Connect(config.Driver, config.DNS)
+		//*
+		d.conn.DB.SetMaxOpenConns(config.MaxOpenConns)
+		d.conn.DB.SetMaxIdleConns(config.MaxIdle)
+		d.conn.DB.SetConnMaxLifetime(config.MaxLifetime)
+		// */
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.conn, err = connect()
 	return
 }
 
@@ -73,13 +96,13 @@ func (d *DB) BeginTrans() {
 }
 
 // Commit commit
-func (d *DB) Commit() {
-	d.tx.Commit()
+func (d *DB) Commit() error {
+	return d.tx.Commit()
 }
 
 // Rollback rollback
-func (d *DB) Rollback() {
-	d.tx.Rollback()
+func (d *DB) Rollback() error {
+	return d.tx.Rollback()
 }
 
 // TransExec trans execute
